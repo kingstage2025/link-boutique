@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>{{ url_for('index', _external=True) }}</loc></url><url><loc>{{ url_for('discover', _external=True) }}</loc></url>{% for shop in slugs %}<url><loc>{{ url_for('public_shop', slug=shop.slug, _external=True) }}</loc></url>{% endfor %}</urlset>

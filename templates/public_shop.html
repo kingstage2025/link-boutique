@@ -1,13 +1,33 @@
 {% extends "base.html" %}
 {% block title %}{{ shop.name }} — LinkBoutik{% endblock %}
-{% block og_title %}{{ shop.name }} — LinkBoutik{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>{% endblock %}
 {% block content %}
-<section class="shop-page">
-  <div class="shop-cover">{% if shop.logo_url %}<img class="shop-logo" src="{{ shop.logo_url }}" alt="Logo {{ shop.name }}">{% else %}<div class="shop-logo initials">{{ shop.name[0]|upper }}</div>{% endif %}</div>
-  <div class="shop-profile"><p class="eyebrow">BOUTIQUE LINKBOUTIK</p><h1>{{ shop.name }}</h1><span class="verified"><i data-lucide="badge-check"></i> Boutique vérifiée</span><p>{{ shop.description or 'Bienvenue dans ma boutique en ligne.' }}</p><div class="shop-info"><span><i data-lucide="map-pin"></i>{{ shop.location or 'Cameroun' }}</span><span><i data-lucide="clock-3"></i>{{ shop.hours or 'Ouvert aujourd’hui' }}</span><span><i data-lucide="phone"></i>{{ shop.phone or shop.whatsapp }}</span></div><div class="shop-actions"><button class="button outline" type="button" onclick="navigator.share ? navigator.share({title:'{{ shop.name }}',url:location.href}) : navigator.clipboard.writeText(location.href)"><i data-lucide="share-2"></i> Partager</button><a class="button outline" href="tel:{{ shop.phone or shop.whatsapp }}"><i data-lucide="phone"></i> Appeler</a></div></div>
-  <div class="category-scroll"><a class="active" href="#produits">Tout</a>{% for category in products|map(attribute='category')|unique %}<a href="#produits">{{ category }}</a>{% endfor %}</div>
-  <div id="produits" class="product-grid">{% for product in products %}<article class="product-card"><button class="product-open" type="button" onclick="this.closest('article').querySelector('dialog').showModal()">{% if product.image_url %}<img loading="lazy" src="{{ product.image_url }}" alt="{{ product.name }}">{% else %}<div class="product-placeholder"><i data-lucide="image"></i></div>{% endif %}<div class="product-body"><span class="tag">{{ product.category }}</span><h2>{{ product.name }}</h2><strong>{{ product.price|xaf }}</strong><span class="product-order">Commander</span></div></button><dialog><form method="post" class="order-sheet"><button class="sheet-close" type="button" onclick="this.closest('dialog').close()"><i data-lucide="x"></i></button>{% if product.image_url %}<img src="{{ product.image_url }}" alt="{{ product.name }}">{% endif %}<p class="eyebrow">{{ product.category }}</p><h2>{{ product.name }}</h2><p>{{ product.description or 'Un produit préparé avec soin.' }}</p><strong class="sheet-price">{{ product.price|xaf }}</strong><input type="hidden" name="product_id" value="{{ product.id }}"><input type="number" name="quantity" min="1" max="{{ product.stock }}" value="1" aria-label="Quantité"><input name="customer_name" required placeholder="Ton nom"><input name="customer_phone" required placeholder="Ton téléphone"><input name="note" placeholder="Une précision (optionnel)"><button class="button primary" type="submit">Envoyer ma commande</button></form></dialog></article>{% else %}<div class="empty-state"><i data-lucide="package-open"></i><h2>La boutique prépare ses produits</h2><p>Reviens bientôt pour découvrir le catalogue.</p></div>{% endfor %}</div>
-  {% if shop.whatsapp %}<div class="sticky-whatsapp"><a class="button whatsapp" target="_blank" href="https://wa.me/{{ shop.whatsapp|replace('+','') }}"><i data-lucide="message-circle"></i> Commander sur WhatsApp</a></div>{% endif %}
-  <footer class="shop-footer">Boutique créée avec <strong>LinkBoutik</strong> — <a href="{{ url_for('register') }}">Crée la tienne gratuitement</a></footer>
-</section>
+{% set shop_url = url_for('public_shop', slug=shop.slug, _external=True) %}
+<section class="shop-page"><div class="shop-hero"><div class="shop-avatar">{% if shop.logo_url %}<img src="{{ shop.logo_url }}" alt="Logo {{ shop.name }}">{% else %}{{ shop.name[0]|upper }}{% endif %}</div><p class="eyebrow">BOUTIQUE LINKBOUTIK</p><h1>{{ shop.name }}</h1><span class="verified">✓ Boutique vérifiée</span><p>{{ shop.description or 'Bienvenue dans ma boutique en ligne.' }}</p><div class="shop-meta">{{ shop.location or 'Cameroun' }} · {{ shop.hours or 'Ouvert aujourd’hui' }}</div><div class="share-actions" data-share-url="{{ shop_url }}"><button type="button" class="share-button" data-copy-link>Copier le lien</button><button type="button" class="share-button" data-native-share>Partager</button><button type="button" class="share-button share-primary" data-open-qr>QR Code</button></div></div><div class="product-grid">{% for product in products %}<article class="product-card">{% if product.image_url %}<img src="{{ product.image_url }}" alt="{{ product.name }}">{% else %}<div class="product-placeholder">✦</div>{% endif %}<div class="product-body"><span class="tag">{{ product.category }}</span><h2>{{ product.name }}</h2><strong>{{ product.price|xaf }}</strong>{% if product.stock > 0 %}<details><summary>Commander</summary><form method="post" class="order-form"><input type="hidden" name="product_id" value="{{ product.id }}"><label>Quantité<input name="quantity" type="number" min="1" max="{{ product.stock }}" value="1" required></label><input name="customer_name" required placeholder="Ton nom"><input name="customer_phone" required placeholder="Ton téléphone"><input name="note" placeholder="Une précision (optionnel)"><button class="button primary">Envoyer ma commande</button></form></details>{% else %}<small class="sold-out">Rupture de stock</small>{% endif %}</div></article>{% else %}<div class="empty-small">La boutique prépare ses produits. Reviens bientôt.</div>{% endfor %}</div>{% if shop.whatsapp %}<a class="button whatsapp" target="_blank" href="https://wa.me/{{ shop.whatsapp|replace('+','') }}?text={{ ('Bonjour, je viens de votre boutique LinkBoutik : ' ~ shop_url)|urlencode }}">Commander sur WhatsApp ↗</a>{% endif %}<footer>Boutique créée avec <b>LinkBoutik</b> · <a href="{{ url_for('register') }}">Crée la tienne gratuitement</a> · <form method="post" action="{{ url_for('report_shop', slug=shop.slug) }}" style="display:inline"><button class="link-button">Signaler</button></form></footer></section>
+<dialog class="qr-dialog" data-qr-dialog><button class="dialog-close" type="button" data-close-qr aria-label="Fermer">×</button><p class="eyebrow">PARTAGER LA BOUTIQUE</p><h2>Scanne pour ouvrir {{ shop.name }}</h2><div id="shopQr"></div><button class="button primary" type="button" data-download-qr>Télécharger le QR Code</button></dialog>
 {% endblock %}
+{% block scripts %}<script>
+const shareBox = document.querySelector('[data-share-url]');
+const shopUrl = shareBox?.dataset.shareUrl;
+const qrDialog = document.querySelector('[data-qr-dialog]');
+document.querySelector('[data-copy-link]')?.addEventListener('click', async (event) => {
+  await navigator.clipboard.writeText(shopUrl);
+  event.currentTarget.textContent = 'Lien copié ✓';
+  setTimeout(() => { event.currentTarget.textContent = 'Copier le lien'; }, 1800);
+});
+document.querySelector('[data-native-share]')?.addEventListener('click', async () => {
+  if (navigator.share) await navigator.share({title: '{{ shop.name|e }}', text: 'Découvre cette boutique sur LinkBoutik', url: shopUrl});
+  else await navigator.clipboard.writeText(shopUrl);
+});
+document.querySelector('[data-open-qr]')?.addEventListener('click', () => {
+  document.getElementById('shopQr').replaceChildren();
+  new QRCode(document.getElementById('shopQr'), {text: shopUrl, width: 210, height: 210, colorDark: '#17201e', colorLight: '#ffffff'});
+  qrDialog.showModal();
+});
+document.querySelector('[data-close-qr]')?.addEventListener('click', () => qrDialog.close());
+document.querySelector('[data-download-qr]')?.addEventListener('click', () => {
+  const image = document.querySelector('#shopQr img');
+  if (!image) return;
+  const link = document.createElement('a'); link.href = image.src; link.download = '{{ shop.slug }}-qr.png'; link.click();
+});
+</script>{% endblock %}

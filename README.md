@@ -3,19 +3,22 @@
 LinkBoutik permet à un petit commerçant de créer gratuitement une mini-boutique
 en ligne et de partager un lien public avec ses clients.
 
-## MVP actuel
+## Fonctionnalités
 
 - inscription et connexion ;
 - création d'une boutique publique avec un lien unique ;
 - ajout et suppression de produits avec prix et stock ;
 - page publique mobile-first ;
 - commandes avec nom, téléphone et note ;
-- partage WhatsApp et URL publique ;
+- recherche publique de boutiques et de produits ;
+- upload d'images sécurisé (5 Mo, extensions contrôlées) ;
+- gestion des clients, soldes/dettes et factures simples ;
+- administration protégée, statistiques, signalements et plans Free/Pro ;
+- parrainage, page tarifs, SEO/Open Graph, sitemap et robots.txt ;
 - stockage SQLite en local ou PostgreSQL avec `DATABASE_URL` en production.
 
-Le projet est volontairement limité à ce parcours avant d'ajouter les fonctions
-Pro. L'objectif est de le tester avec 10 vrais commerçants avant d'investir
-dans les abonnements, les paiements ou les fonctionnalités avancées.
+Le plan Free conserve une limite de 10 produits. Le plan Pro (50 produits) est
+préparé dans l'interface, sans paiement réel pour le moment.
 
 ## Lancer localement
 
@@ -32,8 +35,8 @@ flask --app app run --debug
 Le fichier `render.yaml` crée un service web Flask et une base PostgreSQL.
 Les variables `SECRET_KEY` et `DATABASE_URL` sont injectées par Render.
 
-## Limites connues du MVP
+## Administration
 
-Les photos utilisent actuellement une URL externe, il n'y a pas encore de
-paiement en ligne, de récupération de mot de passe, de QR code ni de formule
-Pro. Ces éléments doivent être ajoutés après validation du parcours de vente.
+Définir `ADMIN_EMAIL` (par défaut `admin@linkboutik.local`) permet d'ouvrir
+`/admin` avec ce compte. Les migrations SQLite sont appliquées au démarrage et
+les déploiements PostgreSQL continuent d'utiliser `DATABASE_URL`.
