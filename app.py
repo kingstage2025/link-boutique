@@ -320,7 +320,7 @@ def create_product():
         flash("Produit invalide.", "danger")
     else:
         try:
-            if execute("SELECT COUNT(*) FROM products WHERE shop_id=?", (shop["id"],)).fetchone()[0] >= limit:
+            if execute("SELECT COUNT(*) AS total FROM products WHERE shop_id=?", (shop["id"],)).fetchone()["total"] >= limit:
                 flash(f"La formule actuelle est limitée à {limit} produits.", "warning")
             else:
                 image = image or request.form.get("image_url", "").strip()[:500]
@@ -467,8 +467,10 @@ def admin():
     return render_template("admin.html", users=execute("SELECT * FROM users ORDER BY id DESC").fetchall(),
                            shops=execute("SELECT s.*,u.email FROM shops s JOIN users u ON u.id=s.user_id ORDER BY s.id DESC").fetchall(),
                            products=execute("SELECT p.*,s.name shop_name FROM products p JOIN shops s ON s.id=p.shop_id ORDER BY p.id DESC").fetchall(),
-                           stats={"users": execute("SELECT COUNT(*) FROM users").fetchone()[0], "shops": execute("SELECT COUNT(*) FROM shops").fetchone()[0],
-                                  "products": execute("SELECT COUNT(*) FROM products").fetchone()[0], "orders": execute("SELECT COUNT(*) FROM orders").fetchone()[0]})
+                           stats={"users": execute("SELECT COUNT(*) AS total FROM users").fetchone()["total"],
+                                  "shops": execute("SELECT COUNT(*) AS total FROM shops").fetchone()["total"],
+                                  "products": execute("SELECT COUNT(*) AS total FROM products").fetchone()["total"],
+                                  "orders": execute("SELECT COUNT(*) AS total FROM orders").fetchone()["total"]})
 
 
 @app.post("/admin/users/<int:user_id>/plan")
