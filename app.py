@@ -45,6 +45,9 @@ def get_db():
 def execute(sql: str, parameters=()):
     if app.config["DATABASE_URL"]:
         sql = sql.replace("?", "%s")
+        cursor = get_db().cursor()
+        cursor.execute(sql, parameters)
+        return cursor
     return get_db().execute(sql, parameters)
 
 
