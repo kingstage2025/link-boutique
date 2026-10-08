@@ -10,6 +10,14 @@ from pathlib import Path
 from flask import Flask, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
+try:
+    import psycopg2
+    from psycopg2 import IntegrityError as PostgresIntegrityError
+except ImportError:
+    psycopg2 = None
+    class PostgresIntegrityError(Exception):
+        pass
+
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE = BASE_DIR / "linkboutik.db"
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -26,7 +34,6 @@ app.config.update(
 def get_db():
     if "db" not in g:
         if app.config["DATABASE_URL"]:
-            import psycopg2
             from psycopg2.extras import DictCursor
 
             url = app.config["DATABASE_URL"].replace("postgres://", "postgresql://", 1)
@@ -140,7 +147,7 @@ def register():
                 get_db().commit()
                 flash("Compte créé. Tu peux maintenant te connecter.", "success")
                 return redirect(url_for("login"))
-            except sqlite3.IntegrityError:
+            except (sqlite3.IntegrityError, PostgresIntegrityError):
                 flash("Cette adresse e-mail est déjà utilisée.", "danger")
     return render_template("login.html", mode="register")
 
