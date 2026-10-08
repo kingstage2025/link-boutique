@@ -14,14 +14,19 @@ document.querySelectorAll("[data-phone-demo]").forEach((demo) => {
     timer = window.setInterval(next, 3200);
   };
 
-  demo.addEventListener("click", next);
-  demo.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
+  demo.addEventListener("click", (event) => {
+    const control = event.target.closest("[data-demo-step]");
+    if (control) {
+      show(Number(control.dataset.demoStep));
+    } else if (!event.target.closest("button")) {
       next();
-      restart();
     }
+    restart();
   });
+  demo.addEventListener("mouseenter", () => window.clearInterval(timer));
+  demo.addEventListener("mouseleave", restart);
+  demo.addEventListener("focusin", () => window.clearInterval(timer));
+  demo.addEventListener("focusout", restart);
   show(0);
   restart();
 });

@@ -99,6 +99,28 @@ def init_db():
         with db.cursor() as cursor:
             for statement in statements:
                 cursor.execute(statement)
+            # Keep databases created by an earlier MVP schema compatible.
+            migrations = (
+                ("users", "is_admin BOOLEAN NOT NULL DEFAULT FALSE"),
+                ("users", "plan TEXT NOT NULL DEFAULT 'free'"),
+                ("users", "referral_code TEXT"),
+                ("users", "referred_by INTEGER"),
+                ("shops", "description TEXT NOT NULL DEFAULT ''"),
+                ("shops", "phone TEXT NOT NULL DEFAULT ''"),
+                ("shops", "whatsapp TEXT NOT NULL DEFAULT ''"),
+                ("shops", "location TEXT NOT NULL DEFAULT ''"),
+                ("shops", "hours TEXT NOT NULL DEFAULT ''"),
+                ("shops", "logo_url TEXT NOT NULL DEFAULT ''"),
+                ("shops", "plan TEXT NOT NULL DEFAULT 'free'"),
+                ("shops", "reported BOOLEAN NOT NULL DEFAULT FALSE"),
+                ("products", "description TEXT NOT NULL DEFAULT ''"),
+                ("products", "category TEXT NOT NULL DEFAULT 'Autres'"),
+                ("products", "price NUMERIC NOT NULL DEFAULT 1 CHECK(price > 0)"),
+                ("products", "stock INTEGER NOT NULL DEFAULT 0 CHECK(stock >= 0)"),
+                ("products", "image_url TEXT NOT NULL DEFAULT ''"),
+            )
+            for table, column in migrations:
+                cursor.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column}")
     else:
         db.executescript(";\n".join(statements) + ";")
         # Migrate the original MVP database without destroying any data.
@@ -324,7 +346,7 @@ def discover():
     query = request.args.get("q", "").strip()
     like = f"%{query}%"
     shops = execute("SELECT * FROM shops WHERE name LIKE ? OR description LIKE ? ORDER BY id DESC LIMIT 30", (like, like)).fetchall()
-    products = execute("SELECT p.*,s.name shop_name,s.slug FROM products p JOIN shops s ON s.id=p.shop_id WHERE p.name LIKE ? OR p.description LIKE ? LIMIT 50", (like, like)).fetchall()
+    products = execute("SELECT p.*,s.name AS shop_name,s.slug AS shop_slug FROM products p JOIN shops s ON s.id=p.shop_id WHERE p.name LIKE ? OR p.description LIKE ? LIMIT 50", (like, like)).fetchall()
     return render_template("discover.html", shops=shops, products=products, query=query)
 
 
