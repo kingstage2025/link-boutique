@@ -64,6 +64,9 @@ def execute(sql: str, parameters=()):
     """Use the same query source for local SQLite and hosted PostgreSQL."""
     if app.config["DATABASE_URL"]:
         sql = sql.replace("?", "%s")
+        cursor = get_db().cursor()
+        cursor.execute(sql, parameters)
+        return cursor
     return get_db().execute(sql, parameters)
 
 
