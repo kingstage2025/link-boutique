@@ -55,6 +55,10 @@ def commit():
     get_db().commit()
 
 
+def rollback():
+    get_db().rollback()
+
+
 def database_errors():
     if app.config["DATABASE_URL"]:
         import psycopg2
@@ -314,13 +318,20 @@ def create_product():
     limit = 50 if g.user["plan"] == "pro" else 10
     if not shop or not name or price <= 0 or stock < 0 or category not in CATEGORIES:
         flash("Produit invalide.", "danger")
-    elif execute("SELECT COUNT(*) FROM products WHERE shop_id=?", (shop["id"],)).fetchone()[0] >= limit:
-        flash(f"La formule actuelle est limitée à {limit} produits.", "warning")
     else:
-        image = image or request.form.get("image_url", "").strip()[:500]
-        execute("INSERT INTO products (shop_id,name,description,category,price,stock,image_url) VALUES (?,?,?,?,?,?,?)",
-                (shop["id"], name, request.form.get("description", "").strip()[:500], category, price, stock, image))
-        commit(); flash("Produit ajouté au catalogue.", "success")
+        try:
+            if execute("SELECT COUNT(*) FROM products WHERE shop_id=?", (shop["id"],)).fetchone()[0] >= limit:
+                flash(f"La formule actuelle est limitée à {limit} produits.", "warning")
+            else:
+                image = image or request.form.get("image_url", "").strip()[:500]
+                execute("INSERT INTO products (shop_id,name,description,category,price,stock,image_url) VALUES (?,?,?,?,?,?,?)",
+                        (shop["id"], name, request.form.get("description", "").strip()[:500], category, price, stock, image))
+                commit()
+                flash("Produit ajouté au catalogue.", "success")
+        except database_errors():
+            rollback()
+            app.logger.exception("Product creation failed for shop %s", shop["id"])
+            flash("Impossible d'ajouter ce produit pour le moment. Vérifie la connexion à la base de données.", "danger")
     return redirect(url_for("dashboard"))
 
 
