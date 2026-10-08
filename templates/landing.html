@@ -1,7 +1,22 @@
 {% extends "base.html" %}
 {% block title %}LinkBoutik — Ta boutique, ton lien{% endblock %}
 {% block content %}
-<section class="hero-landing"><p class="eyebrow">POUR LES COMMERÇANTS D'AFRIQUE FRANCOPHONE</p><h1>Ta boutique en ligne.<br><em>Ton lien à partager.</em></h1><p>Présente tes produits, reçois des commandes sur WhatsApp et commence gratuitement, même depuis ton téléphone.</p><div class="hero-actions"><a class="button primary" href="{{ url_for('register') }}">Créer ma boutique gratuitement</a><a class="button secondary" href="#fonctionnalites">Découvrir LinkBoutik</a></div></section>
-<section id="fonctionnalites" class="feature-grid"><article><b>01</b><h2>Un lien simple</h2><p>Partage ta boutique sur WhatsApp, Facebook, TikTok ou avec un QR code.</p></article><article><b>02</b><h2>Des commandes claires</h2><p>Tes clients voient tes produits et t'envoient leurs coordonnées en quelques secondes.</p></article><article><b>03</b><h2>Un espace pour toi</h2><p>Gère tes produits, ton stock et tes commandes depuis un tableau de bord mobile.</p></article></section>
-<section class="cta"><h2>Commence avec tes 10 premiers produits.</h2><a class="button light" href="{{ url_for('register') }}">Lancer ma boutique</a></section>
+<section class="landing-hero">
+  <div class="landing-copy">
+    <p class="eyebrow">TA BOUTIQUE, TON LIEN</p>
+    <h1>Vends simplement.<br><em>Partage partout.</em></h1>
+    <p class="hero-lead">Crée ta boutique en ligne en 2 minutes et présente tes produits à tes clients, même depuis un téléphone.</p>
+    <div class="hero-actions"><a class="button primary" href="{{ url_for('register') }}">Créer ma boutique gratuitement</a><a class="button outline" href="#comment-ca-marche">Découvrir les boutiques</a></div>
+    <p class="trust-note"><i data-lucide="shield-check"></i> Pas de carte bancaire pour commencer</p>
+  </div>
+  <div class="phone-preview" aria-label="Aperçu d'une boutique LinkBoutik">
+    <div class="phone-bar"><span></span><b>LinkBoutik</b><i data-lucide="more-horizontal"></i></div>
+    <div class="preview-cover"></div><div class="preview-avatar">D</div>
+    <div class="preview-content"><strong>Dimitri Shop</strong><span class="verified"><i data-lucide="badge-check"></i> Boutique vérifiée</span><p>Des articles choisis avec soin.</p><div class="preview-chips"><span>Tout</span><span>Mode</span><span>Maison</span></div><div class="preview-products"><div><div class="preview-image"></div><b>Sac élégant</b><strong>12 500 FCFA</strong></div><div><div class="preview-image second"></div><b>Montre classique</b><strong>18 000 FCFA</strong></div></div></div>
+  </div>
+</section>
+<section id="comment-ca-marche" class="section-block"><div class="section-heading"><p class="eyebrow">C'EST SIMPLE</p><h2>De l'idée à ta première commande.</h2></div><div class="steps"><article><b>01</b><i data-lucide="store"></i><h3>Crée</h3><p>Donne un nom à ta boutique et ajoute tes informations.</p></article><article><b>02</b><i data-lucide="package-plus"></i><h3>Ajoute</h3><p>Présente tes produits, tes prix et ton stock.</p></article><article><b>03</b><i data-lucide="send"></i><h3>Partage</h3><p>Envoie ton lien sur WhatsApp et commence à vendre.</p></article></div></section>
+<section class="section-block soft-section"><div class="section-heading"><p class="eyebrow">POUR TON ACTIVITÉ</p><h2>Une boutique qui te ressemble.</h2></div><div class="category-pills"><span>Mode & accessoires</span><span>Beauté & coiffure</span><span>Alimentation</span><span>Téléphones</span><span>Services</span></div></section>
+<section class="pricing"><div><p class="eyebrow">COMMENCE GRATUITEMENT</p><h2>Les bons outils, au bon moment.</h2><p class="muted">Teste ton idée avec l'offre Free. Passe en Pro quand ta boutique grandit.</p></div><div class="price-cards"><article><span class="tag">FREE</span><h3>Pour commencer</h3><strong>0 FCFA</strong><p>Une boutique · 10 produits · commandes · WhatsApp</p><a class="button outline" href="{{ url_for('register') }}">Créer ma boutique</a></article><article class="featured-price"><span class="tag">PRO · BIENTÔT</span><h3>Pour grandir</h3><strong>À venir</strong><p>Produits illimités · statistiques · factures · sans marque</p><button class="button disabled" disabled>Me prévenir</button></article></div></section>
+<section class="final-cta"><h2>Ton prochain client est peut-être déjà sur WhatsApp.</h2><a class="button light" href="{{ url_for('register') }}">Lancer ma boutique</a></section>
 {% endblock %}

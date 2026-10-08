@@ -6,6 +6,10 @@
   <meta name="description" content="Crée ta mini-boutique en ligne gratuitement et vends via WhatsApp.">
   <meta property="og:title" content="{% block og_title %}LinkBoutik{% endblock %}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@0.468.0"></script>
 </head>
 <body>
   <header class="topbar"><a class="brand" href="{{ url_for('index') }}">Link<span>Boutik</span></a>
@@ -15,5 +19,6 @@
     {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
     {% block content %}{% endblock %}
   </main>
+  <script>if (window.lucide) lucide.createIcons();</script>
 </body>
 </html>
