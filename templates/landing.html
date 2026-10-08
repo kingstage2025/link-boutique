@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}LinkBoutik — Ta boutique, ton lien{% endblock %}
+{% block content %}
+<section class="hero-landing"><p class="eyebrow">POUR LES COMMERÇANTS D'AFRIQUE FRANCOPHONE</p><h1>Ta boutique en ligne.<br><em>Ton lien à partager.</em></h1><p>Présente tes produits, reçois des commandes sur WhatsApp et commence gratuitement, même depuis ton téléphone.</p><div class="hero-actions"><a class="button primary" href="{{ url_for('register') }}">Créer ma boutique gratuitement</a><a class="button secondary" href="#fonctionnalites">Découvrir LinkBoutik</a></div></section>
+<section id="fonctionnalites" class="feature-grid"><article><b>01</b><h2>Un lien simple</h2><p>Partage ta boutique sur WhatsApp, Facebook, TikTok ou avec un QR code.</p></article><article><b>02</b><h2>Des commandes claires</h2><p>Tes clients voient tes produits et t'envoient leurs coordonnées en quelques secondes.</p></article><article><b>03</b><h2>Un espace pour toi</h2><p>Gère tes produits, ton stock et tes commandes depuis un tableau de bord mobile.</p></article></section>
+<section class="cta"><h2>Commence avec tes 10 premiers produits.</h2><a class="button light" href="{{ url_for('register') }}">Lancer ma boutique</a></section>
+{% endblock %}

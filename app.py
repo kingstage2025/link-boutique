@@ -4,6 +4,8 @@ import csv
 import io
 import os
 import sqlite3
+import re
+import secrets
 from datetime import date, datetime
 from functools import wraps
 from pathlib import Path
@@ -41,6 +43,8 @@ CATEGORIES = [
     "Épargne",
     "Autres",
 ]
+
+PRODUCT_CATEGORIES = ["Alimentation", "Mode", "Beauté", "Maison", "Téléphones", "Services", "Autres"]
 
 
 def get_db() -> sqlite3.Connection:
@@ -103,6 +107,42 @@ def init_db() -> None:
             amount REAL NOT NULL CHECK(amount > 0),
             month TEXT NOT NULL,
             UNIQUE(user_id, category, month)
+        );
+        CREATE TABLE IF NOT EXISTS shops (
+            id {id_type} PRIMARY KEY,
+            user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+            name TEXT NOT NULL,
+            slug TEXT NOT NULL UNIQUE,
+            description TEXT NOT NULL DEFAULT '',
+            phone TEXT NOT NULL DEFAULT '',
+            whatsapp TEXT NOT NULL DEFAULT '',
+            location TEXT NOT NULL DEFAULT '',
+            hours TEXT NOT NULL DEFAULT '',
+            logo_url TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS products (
+            id {id_type} PRIMARY KEY,
+            shop_id INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            price REAL NOT NULL CHECK(price > 0),
+            category TEXT NOT NULL DEFAULT 'Autres',
+            image_url TEXT NOT NULL DEFAULT '',
+            stock INTEGER NOT NULL DEFAULT 0 CHECK(stock >= 0),
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS orders (
+            id {id_type} PRIMARY KEY,
+            shop_id INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+            product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+            quantity INTEGER NOT NULL CHECK(quantity > 0),
+            customer_name TEXT NOT NULL,
+            customer_phone TEXT NOT NULL,
+            note TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'new',
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
         """.format(
         id_type=(
@@ -173,7 +213,9 @@ def format_xaf(value: float | int) -> str:
 
 @app.route("/")
 def index():
-    return redirect(url_for("dashboard" if g.user else "login"))
+    if g.user:
+        return redirect(url_for("dashboard"))
+    return render_template("landing.html")
 
 
 @app.route("/register", methods=("GET", "POST"))
@@ -221,9 +263,123 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/dashboard")
+def make_slug(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.lower().strip()).strip("-")
+    return slug or f"boutique-{secrets.token_hex(3)}"
+
+
+@app.route("/dashboard", methods=("GET", "POST"))
 @login_required
 def dashboard():
+    db = get_db()
+    shop = execute("SELECT * FROM shops WHERE user_id = ?", (g.user["id"],)).fetchone()
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        if not name:
+            flash("Donne un nom à ta boutique.", "danger")
+        else:
+            slug = make_slug(request.form.get("slug") or name)
+            existing = execute("SELECT id FROM shops WHERE slug = ? AND user_id != ?", (slug, g.user["id"])).fetchone()
+            if existing:
+                slug = f"{slug}-{secrets.token_hex(2)}"
+            values = (
+                name, slug, request.form.get("description", "").strip(),
+                request.form.get("phone", "").strip(), request.form.get("whatsapp", "").strip(),
+                request.form.get("location", "").strip(), request.form.get("hours", "").strip(),
+                request.form.get("logo_url", "").strip(),
+            )
+            if shop:
+                execute("""UPDATE shops SET name=?, slug=?, description=?, phone=?, whatsapp=?,
+                           location=?, hours=?, logo_url=? WHERE id=? AND user_id=?""",
+                        (*values, shop["id"], g.user["id"]))
+            else:
+                execute("""INSERT INTO shops
+                           (user_id,name,slug,description,phone,whatsapp,location,hours,logo_url)
+                           VALUES (?,?,?,?,?,?,?,?,?)""", (g.user["id"], *values))
+            db.commit()
+            flash("Ta boutique est publiée.", "success")
+            return redirect(url_for("dashboard"))
+    shop = execute("SELECT * FROM shops WHERE user_id = ?", (g.user["id"],)).fetchone()
+    products = execute("SELECT * FROM products WHERE shop_id = ? ORDER BY id DESC", (shop["id"],)).fetchall() if shop else []
+    orders = execute("""SELECT orders.*, products.name AS product_name FROM orders
+                       JOIN products ON products.id = orders.product_id
+                       WHERE orders.shop_id = ? ORDER BY orders.id DESC LIMIT 20""",
+                     (shop["id"],)).fetchall() if shop else []
+    return render_template("dashboard.html", shop=shop, products=products, orders=orders,
+                           categories=PRODUCT_CATEGORIES)
+
+
+@app.post("/products")
+@login_required
+def create_product():
+    shop = execute("SELECT id FROM shops WHERE user_id = ?", (g.user["id"],)).fetchone()
+    if not shop:
+        flash("Crée d'abord ta boutique.", "warning")
+        return redirect(url_for("dashboard"))
+    try:
+        name = request.form.get("name", "").strip()
+        price = float(request.form.get("price", "0"))
+        stock = int(request.form.get("stock", "0"))
+        if not name or price <= 0 or stock < 0:
+            raise ValueError
+    except ValueError:
+        flash("Vérifie le nom, le prix et le stock.", "danger")
+        return redirect(url_for("dashboard"))
+    execute("""INSERT INTO products (shop_id,name,description,price,category,image_url,stock)
+               VALUES (?,?,?,?,?,?,?)""",
+            (shop["id"], name, request.form.get("description", "").strip(), price,
+             request.form.get("category", "Autres"), request.form.get("image_url", "").strip(), stock))
+    get_db().commit()
+    flash("Produit ajouté.", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.post("/products/<int:product_id>/delete")
+@login_required
+def delete_product(product_id: int):
+    execute("""DELETE FROM products WHERE id = ? AND shop_id IN
+               (SELECT id FROM shops WHERE user_id = ?)""", (product_id, g.user["id"]))
+    get_db().commit()
+    flash("Produit supprimé.", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/boutique/<slug>", methods=("GET", "POST"))
+def public_shop(slug: str):
+    shop = execute("SELECT * FROM shops WHERE slug = ?", (slug,)).fetchone()
+    if shop is None:
+        return render_template("not_found.html"), 404
+    if request.method == "POST":
+        try:
+            product_id = int(request.form["product_id"])
+            quantity = int(request.form.get("quantity", "1"))
+            product = execute("""SELECT * FROM products WHERE id=? AND shop_id=? AND is_active=TRUE""",
+                              (product_id, shop["id"])).fetchone()
+            if product is None or quantity < 1 or quantity > product["stock"]:
+                raise ValueError
+            customer_name = request.form.get("customer_name", "").strip()
+            customer_phone = request.form.get("customer_phone", "").strip()
+            if not customer_name or not customer_phone:
+                raise ValueError
+            execute("""INSERT INTO orders
+                       (shop_id,product_id,quantity,customer_name,customer_phone,note)
+                       VALUES (?,?,?,?,?,?)""",
+                    (shop["id"], product_id, quantity, customer_name, customer_phone,
+                     request.form.get("note", "").strip()))
+            execute("UPDATE products SET stock = stock - ? WHERE id = ?", (quantity, product_id))
+            get_db().commit()
+            flash("Commande envoyée au commerçant.", "success")
+        except (KeyError, ValueError):
+            flash("Vérifie le produit, la quantité et tes coordonnées.", "danger")
+    products = execute("SELECT * FROM products WHERE shop_id=? AND is_active=TRUE ORDER BY id DESC",
+                       (shop["id"],)).fetchall()
+    return render_template("public_shop.html", shop=shop, products=products)
+
+
+@app.route("/finance")
+@login_required
+def finance_dashboard():
+    return redirect(url_for("dashboard"))
     month = request.args.get("month", date.today().strftime("%Y-%m"))
     start, end = month_bounds(month)
     db = get_db()
@@ -279,7 +435,7 @@ def dashboard():
         for budget in budgets
     ]
     return render_template(
-        "dashboard.html",
+        "finance_dashboard.html",
         month=month,
         income=total_map.get("income", 0),
         expenses_total=total_map.get("expense", 0),
