@@ -6,13 +6,14 @@
   <meta name="description" content="{% block description %}Crée ta boutique en ligne, partage ton lien et reçois des commandes en FCFA.{% endblock %}">
   <meta property="og:title" content="{% block og_title %}LinkBoutik{% endblock %}">
   <meta property="og:description" content="Ta boutique, ton lien.">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='link-boutique-logo.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='demo.js') }}" defer></script>
   {% block head %}{% endblock %}
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="{{ url_for('index') }}">Link<span>Boutik</span></a>
+    <a class="brand" href="{{ url_for('index') }}" aria-label="Link Boutique, accueil"><img src="{{ url_for('static', filename='link-boutique-logo-header.png') }}" alt="Link Boutique"></a>
     <nav><a href="{{ url_for('discover') }}">Découvrir</a>{% if g.user %}<a href="{{ url_for('dashboard') }}">Mon espace</a><a href="{{ url_for('referral') }}">Parrainage</a>{% if g.user.is_admin or g.user.email == config.ADMIN_EMAIL|default('admin@linkboutik.local') %}<a href="{{ url_for('admin') }}">Admin</a>{% endif %}<form method="post" action="{{ url_for('logout') }}"><button class="link-button">Déconnexion</button></form>{% else %}<a href="{{ url_for('pricing') }}">Tarifs</a><a href="{{ url_for('login') }}">Se connecter</a><a class="button small" href="{{ url_for('register') }}">Créer ma boutique</a>{% endif %}</nav>
   </header>
   <main>
