@@ -6,6 +6,7 @@ import sqlite3
 import uuid
 from functools import wraps
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from flask import Flask, flash, g, redirect, render_template, request, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -479,7 +480,16 @@ def uploaded_file(filename): return send_from_directory(UPLOAD_DIR, filename)
 @app.route("/sitemap.xml")
 def sitemap():
     slugs = execute("SELECT slug FROM shops ORDER BY id DESC").fetchall()
-    return render_template("sitemap.xml", slugs=slugs), 200, {"Content-Type": "application/xml"}
+    urls = [
+        f"<url><loc>{escape(url_for('index', _external=True))}</loc></url>",
+        f"<url><loc>{escape(url_for('discover', _external=True))}</loc></url>",
+    ]
+    urls.extend(
+        f"<url><loc>{escape(url_for('public_shop', slug=shop['slug'], _external=True))}</loc></url>"
+        for shop in slugs
+    )
+    body = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + "".join(urls) + "</urlset>"
+    return body, 200, {"Content-Type": "application/xml"}
 
 
 @app.route("/robots.txt")
