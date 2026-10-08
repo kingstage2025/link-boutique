@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Transactions - FinPilot{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">CARNET D'ARGENT</p><h1>Ajoute ce qui s'est passé.</h1><p class="muted">Un revenu de chantier, un trajet moto ou un pari : note tout sans jugement.</p></div></div>
+<div class="grid two">
+<section class="panel add-panel"><h2>Nouvelle opération</h2><form method="post" class="form-stack">
+<label>Type<select name="kind"><option value="expense">Dépense</option><option value="income">Revenu</option></select></label>
+<label>Montant (FCFA)<input type="number" name="amount" min="1" step="1" required></label>
+<label>Note<input name="description" placeholder="Ex. chantier Bonamoussadi, taxi, beignets"></label>
+<label>Catégorie <small>(laisser vide pour l'auto-catégorisation)</small><select name="category"><option value="">Automatique</option>{% for category in categories %}<option>{{ category }}</option>{% endfor %}</select></label>
+<label>Date<input type="date" name="transaction_date" value="{{ today or '' }}" required></label>
+<button class="button primary">Ajouter</button></form></section>
+<section class="panel"><h2>Historique</h2><div class="table-wrap"><table><tr><th>Date</th><th>Description</th><th>Catégorie</th><th>Montant</th><th></th></tr>{% for row in transactions %}<tr><td>{{ row.transaction_date }}</td><td>{{ row.description or '-' }}</td><td><span class="tag">{{ row.category }}</span></td><td class="{{ 'positive' if row.kind == 'income' else 'negative' }}">{{ '+' if row.kind == 'income' else '-' }}{{ row.amount|xaf }}</td><td><form method="post" action="{{ url_for('delete_transaction', transaction_id=row.id) }}"><button class="icon-button" title="Supprimer">×</button></form></td></tr>{% else %}<tr><td colspan="5" class="muted">Aucune transaction.</td></tr>{% endfor %}</table></div></section>
+</div>
+{% endblock %}

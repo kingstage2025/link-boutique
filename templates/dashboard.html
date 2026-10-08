@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord - FinPilot{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">MON ARGENT · {{ month }}</p><h1>Salut, {{ g.user.email.split('@')[0] }}.</h1><p class="muted">Chaque franc compte. Voici où va ton argent.</p></div>
+  <form><input type="month" name="month" value="{{ month }}"><button class="button secondary">Actualiser</button></form>
+</div>
+<div class="stats">
+  <div class="stat-card hero-stat"><span>Il te reste ce mois</span><strong class="{{ 'positive' if balance >= 0 else 'negative' }}">{{ balance|xaf }}</strong><small>après tes entrées et sorties</small></div>
+  <div class="stat-card"><span>Argent gagné</span><strong class="positive">+{{ income|xaf }}</strong><small>chantier + autres revenus</small></div>
+  <div class="stat-card"><span>Dépensé</span><strong class="negative">-{{ expenses_total|xaf }}</strong><small>beignets, transport, paris…</small></div>
+</div>
+<section class="money-note"><span class="note-icon">✦</span><div><strong>Ton repère du jour</strong><p>Tu as prévu 4 000 FCFA pour beignets + transport ? Ajoute chaque dépense le soir : tu verras vite ce qui te coûte le plus.</p></div><a class="button light" href="{{ url_for('transactions') }}">Ajouter une dépense</a></section>
+<div class="dashboard-stack">
+  <section class="panel chart-panel"><div class="panel-title"><div><p class="eyebrow">RÉPARTITION</p><h2>Où part ton argent ?</h2></div></div><canvas id="expensesChart"></canvas>{% if not expenses %}<p class="empty-state">Ajoute ta première dépense pour voir ton mois.</p>{% endif %}</section>
+  <section class="panel"><div class="panel-title"><h2>Budgets du mois</h2><a href="{{ url_for('budgets', month=month) }}">Gérer</a></div>{% for budget in budget_status %}{% set percent = (budget.spent / budget.amount * 100) if budget.amount else 0 %}<div class="budget-row"><div><b>{{ budget.category }}</b><span>{{ budget.spent|xaf }} / {{ budget.amount|xaf }}</span></div><div class="progress"><i class="{{ 'over' if percent > 100 else '' }}" style="width: {{ [percent, 100]|min }}%"></i></div></div>{% else %}<p class="muted">Aucun budget défini pour ce mois.</p>{% endfor %}</section>
+</div>
+<section class="panel betting-card"><div><p class="eyebrow">ZONE À SURVEILLER</p><h2>Paris sportifs</h2><p class="muted">Tu as dépensé <strong class="negative">{{ betting_total|xaf }}</strong> ce mois-ci.</p></div><div class="betting-message">{% if betting_total > 0 %}Ce montant est une perte potentielle : protège d’abord ton argent pour le transport et les repas.{% else %}Aucun pari enregistré ce mois-ci. Garde cette marge pour tes besoins essentiels.{% endif %}</div></section>
+<section class="panel"><div class="panel-title"><h2>Dernières transactions</h2><a href="{{ url_for('transactions') }}">Voir tout</a></div><div class="table-wrap"><table><tr><th>Date</th><th>Description</th><th>Catégorie</th><th>Montant</th></tr>{% for row in recent %}<tr><td>{{ row.transaction_date }}</td><td>{{ row.description or 'Sans description' }}</td><td><span class="tag">{{ row.category }}</span></td><td class="{{ 'positive' if row.kind == 'income' else 'negative' }}">{{ '+' if row.kind == 'income' else '-' }}{{ row.amount|xaf }}</td></tr>{% else %}<tr><td colspan="4" class="muted">Aucune transaction.</td></tr>{% endfor %}</table></div></section>
+<script>
+new Chart(document.getElementById('expensesChart'), {type:'doughnut', data:{labels:{{ expenses|map(attribute='category')|list|tojson }}, datasets:[{data:{{ expenses|map(attribute='total')|list|tojson }}, backgroundColor:['#14b8a6','#f97316','#6366f1','#eab308','#ec4899','#22c55e','#8b5cf6','#0ea5e9']}]}, options:{plugins:{legend:{position:'bottom'}}}});
+</script>
+{% endblock %}
