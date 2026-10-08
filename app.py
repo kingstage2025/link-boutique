@@ -52,6 +52,13 @@ def commit():
     get_db().commit()
 
 
+def database_errors():
+    if app.config["DATABASE_URL"]:
+        import psycopg2
+        return (sqlite3.Error, psycopg2.Error)
+    return (sqlite3.Error,)
+
+
 @app.teardown_appcontext
 def close_db(_error=None):
     db = g.pop("db", None)
@@ -346,8 +353,13 @@ def public_shop(slug):
 def discover():
     query = request.args.get("q", "").strip()
     like = f"%{query}%"
-    shops = execute("SELECT * FROM shops WHERE name LIKE ? OR description LIKE ? ORDER BY id DESC LIMIT 30", (like, like)).fetchall()
-    products = execute("SELECT p.*,s.name AS shop_name,s.slug AS shop_slug FROM products p JOIN shops s ON s.id=p.shop_id WHERE p.name LIKE ? OR p.description LIKE ? LIMIT 50", (like, like)).fetchall()
+    try:
+        shops = execute("SELECT * FROM shops WHERE name LIKE ? OR description LIKE ? ORDER BY id DESC LIMIT 30", (like, like)).fetchall()
+        products = execute("SELECT p.*,s.name AS shop_name,s.slug AS shop_slug FROM products p JOIN shops s ON s.id=p.shop_id WHERE p.name LIKE ? OR p.description LIKE ? LIMIT 50", (like, like)).fetchall()
+    except database_errors():
+        app.logger.exception("Public discovery query failed")
+        flash("La découverte est temporairement indisponible. Réessaie dans un instant.", "warning")
+        shops, products = [], []
     return render_template("discover.html", shops=shops, products=products, query=query)
 
 
@@ -479,7 +491,11 @@ def uploaded_file(filename): return send_from_directory(UPLOAD_DIR, filename)
 
 @app.route("/sitemap.xml")
 def sitemap():
-    slugs = execute("SELECT slug FROM shops ORDER BY id DESC").fetchall()
+    try:
+        slugs = execute("SELECT slug FROM shops ORDER BY id DESC").fetchall()
+    except database_errors():
+        app.logger.exception("Sitemap query failed")
+        return "Sitemap temporairement indisponible.", 503, {"Content-Type": "text/plain; charset=utf-8"}
     urls = [
         f"<url><loc>{escape(url_for('index', _external=True))}</loc></url>",
         f"<url><loc>{escape(url_for('discover', _external=True))}</loc></url>",
