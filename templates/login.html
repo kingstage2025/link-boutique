@@ -1,133 +1,17 @@
 {% extends "base.html" %}
-{% block title %}FinPilot — Connexion{% endblock %}
-{% block head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
-{% endblock %}
-{% block content %}
 {% set register_mode = mode|default('login') == 'register' %}
-  <main class="auth" data-mode="{{ 'register' if register_mode else 'login' }}">
-    <section class="auth__main">
-      <a class="auth__logo" href="{{ url_for('dashboard') if g.user else url_for('login') }}">Fin<span>Pilot</span></a>
-
-      <div class="auth__body">
-        <h1 class="auth__title" aria-live="polite">{{ "Crée ton espace financier." if register_mode else "Reprends le contrôle de chaque franc." }}</h1>
-        <p class="auth__lead">
-          Un espace simple pour suivre tes chantiers, tes trajets,
-          tes beignets et tes objectifs.
-        </p>
-
-        <div class="auth__tabs" role="tablist" aria-label="Accès au compte">
-          <button type="button" role="tab" aria-selected="{{ 'true' if not register_mode else 'false' }}" data-auth-tab="login">Se connecter</button>
-          <button type="button" role="tab" aria-selected="{{ 'true' if register_mode else 'false' }}" data-auth-tab="register">Créer un compte</button>
-        </div>
-
-        <form method="post" action="{{ url_for('register' if register_mode else 'login') }}" class="auth__form">
-          <div class="auth__field">
-            <label for="email">E-mail</label>
-            <input id="email" name="email" type="email" autocomplete="email" placeholder="toi@exemple.com" required>
-          </div>
-          <div class="auth__field">
-            <label for="password">Mot de passe</label>
-            <div class="auth__pw">
-              <input id="password" name="password" type="password" minlength="{{ 8 if register_mode else 1 }}" autocomplete="{{ 'new-password' if register_mode else 'current-password' }}" placeholder="••••••••" required>
-              <button type="button" class="auth__reveal" aria-pressed="false">Afficher</button>
-            </div>
-            <p class="auth__hint" hidden>8 caractères minimum.</p>
-          </div>
-          <button class="auth__submit" type="submit">{{ "Créer mon compte" if register_mode else "Se connecter" }}</button>
-        </form>
-
-        <p class="auth__switch">
-          <span id="switch-q">{{ "Un compte existe déjà ?" if register_mode else "Nouveau sur FinPilot ?" }}</span>
-          <a href="{{ url_for('login' if register_mode else 'register') }}" id="switch-link" data-auth-tab="{{ 'login' if register_mode else 'register' }}">{{ "Se connecter" if register_mode else "Créer un compte" }}</a>
-        </p>
-      </div>
-    </section>
-
-    <aside class="auth__aside" aria-hidden="true">
-      <div class="ledger">
-        <p class="ledger__head">Ce mois-ci <span>Aperçu</span></p>
-        <ul>
-          <li><div><strong>Chantiers</strong><b>85 000 / 120 000 F</b></div><i style="--p:71%"></i></li>
-          <li class="is-high"><div><strong>Trajets</strong><b>46 000 / 50 000 F</b></div><i style="--p:92%"></i></li>
-          <li><div><strong>Beignets</strong><b>31 500 / 60 000 F</b></div><i style="--p:53%"></i></li>
-          <li><div><strong>Objectif épargne</strong><b>25 000 / 100 000 F</b></div><i style="--p:25%"></i></li>
-        </ul>
-      </div>
-      <p class="auth__quote">
-        Chaque franc compte.
-        <span>Commence aujourd'hui, avance à ton rythme.</span>
-      </p>
-    </aside>
-  </main>
-
-  <script>
-    const $ = (s) => document.querySelector(s);
-    const auth = $('.auth');
-    const initialMode = auth.dataset.mode;
-    const tabs = document.querySelectorAll('.auth__tabs [data-auth-tab]');
-    const title = $('.auth__title');
-    const form = $('.auth__form');
-    const submit = $('.auth__submit');
-    const password = $('#password');
-    const hint = $('.auth__hint');
-    const reveal = $('.auth__reveal');
-    const switchQ = $('#switch-q');
-    const switchLink = $('#switch-link');
-
-    const copy = {
-      login: {
-        title: 'Reprends le contrôle de chaque franc.',
-        submit: 'Se connecter',
-        question: 'Nouveau sur FinPilot ?',
-        link: 'Créer un compte',
-        other: 'register',
-        autocomplete: 'current-password',
-        minLength: 1
-      },
-      register: {
-        title: 'Crée ton espace financier.',
-        submit: 'Créer mon compte',
-        question: 'Un compte existe déjà ?',
-        link: 'Se connecter',
-        other: 'login',
-        autocomplete: 'new-password',
-        minLength: 8
-      }
-    };
-
-    function setMode(mode) {
-      const c = copy[mode];
-      auth.dataset.mode = mode;
-      title.textContent = c.title;
-      submit.textContent = c.submit;
-      switchQ.textContent = c.question;
-      switchLink.textContent = c.link;
-      switchLink.dataset.authTab = c.other;
-      form.action = mode === 'register'
-        ? '{{ url_for("register") }}'
-        : '{{ url_for("login") }}';
-      password.autocomplete = c.autocomplete;
-      password.minLength = c.minLength;
-      hint.hidden = mode !== 'register';
-      tabs.forEach((tab) => tab.setAttribute('aria-selected', tab.dataset.authTab === mode));
-    }
-
-    tabs.forEach((tab) => tab.addEventListener('click', () => setMode(tab.dataset.authTab)));
-    switchLink.addEventListener('click', (event) => {
-      event.preventDefault();
-      setMode(switchLink.dataset.authTab);
-    });
-
-    reveal.addEventListener('click', () => {
-      const show = password.type === 'password';
-      password.type = show ? 'text' : 'password';
-      reveal.textContent = show ? 'Masquer' : 'Afficher';
-      reveal.setAttribute('aria-pressed', show);
-    });
-
-    setMode(initialMode);
-  </script>
+{% block title %}{{ "Créer ma boutique" if register_mode else "Se connecter" }} — LinkBoutik{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <a class="brand auth-brand" href="{{ url_for('index') }}">Link<span>Boutik</span></a>
+  <p class="eyebrow">{{ "COMMENCE GRATUITEMENT" if register_mode else "BIENVENUE" }}</p>
+  <h1>{{ "Crée ta boutique en 2 minutes." if register_mode else "Content de te revoir." }}</h1>
+  <p class="muted">{{ "Présente tes produits et partage ton lien avec tes clients." if register_mode else "Connecte-toi pour gérer ta boutique et tes commandes." }}</p>
+  <form method="post" action="{{ url_for('register' if register_mode else 'login') }}" class="form-stack auth-form">
+    <label>E-mail<input name="email" type="email" autocomplete="email" required placeholder="toi@exemple.com"></label>
+    <label>Mot de passe<input name="password" type="password" minlength="{{ 8 if register_mode else 1 }}" autocomplete="{{ 'new-password' if register_mode else 'current-password' }}" required placeholder="8 caractères minimum"></label>
+    <button class="button primary"> {{ "Créer ma boutique" if register_mode else "Se connecter" }}</button>
+  </form>
+  <p class="auth-switch">{{ "Tu as déjà un compte ?" if register_mode else "Nouveau sur LinkBoutik ?" }} <a href="{{ url_for('login' if register_mode else 'register') }}">{{ "Se connecter" if register_mode else "Créer ma boutique" }}</a></p>
+</section>
 {% endblock %}
