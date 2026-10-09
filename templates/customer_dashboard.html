@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Mes commandes — LinkBoutik{% endblock %}
+{% block content %}
+<section class="dashboard">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">ESPACE CLIENT</p>
+      <h1>Mes commandes</h1>
+      <p class="muted">Retrouve tes achats et leur statut au même endroit.</p>
+    </div>
+    <a class="button primary" href="{{ url_for('discover') }}">Découvrir les boutiques →</a>
+  </div>
+  <section class="panel">
+    <div class="section-title"><div><p class="eyebrow">HISTORIQUE</p><h2>Commandes récentes</h2></div><span class="tag">{{ orders|length }}</span></div>
+    <div class="list">
+      {% for order in orders %}
+      <div class="order-row">
+        <b>{{ order.product_name }} × {{ order.quantity }}</b>
+        <span>{{ order.shop_name }} · {{ (order.unit_price * order.quantity)|xaf }}</span>
+        <small>Statut : {{ status_labels.get(order.status, order.status) }} · {{ order.payment_method|capitalize }} · {{ order.delivery_method|capitalize }}</small>
+      </div>
+      {% else %}
+      <p class="empty-small">Tu n'as pas encore passé de commande. Explore les boutiques pour commencer.</p>
+      {% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

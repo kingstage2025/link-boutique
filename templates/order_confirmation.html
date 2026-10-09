@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Commande confirmée — LinkBoutik{% endblock %}
+{% block content %}<section class="empty-page"><p class="eyebrow">MERCI</p><h1>Commande reçue</h1><p>Ta référence de commande est <strong>{{ order_ref }}</strong>.</p><p class="muted">Paiement simulé : {{ payment_label }}<br>Livraison simulée : {{ delivery_label }}</p><p class="muted">Le commerçant pourra te contacter pour confirmer la commande.</p><a class="button primary" href="{{ url_for('customer_dashboard') if g.user and g.user.role == 'client' else url_for('discover') }}">Continuer</a></section>{% endblock %}

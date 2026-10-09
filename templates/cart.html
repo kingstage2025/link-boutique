@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Mon panier — LinkBoutik{% endblock %}
+{% block content %}
+<section class="dashboard"><div class="page-heading"><div><p class="eyebrow">PANIER</p><h1>Prépare ta commande</h1></div></div>
+{% if items %}<form method="post" class="panel"><div class="list">{% for item in items %}<div class="list-row"><div><b>{{ item.product.name }}</b><small>{{ item.product.shop_name }} · {{ item.product.price|xaf }}</small></div><label style="max-width:120px">Quantité<input name="quantity_{{ item.product.id }}" type="number" min="0" max="{{ item.product.stock }}" value="{{ item.quantity }}"></label><strong>{{ (item.product.price * item.quantity)|xaf }}</strong></div>{% endfor %}</div><h2>Total : {{ total|xaf }}</h2><button class="button secondary">Mettre à jour le panier</button> <a class="button primary" href="{{ url_for('checkout') }}">Passer la commande</a></form>{% else %}<section class="panel"><p class="empty-small">Ton panier est vide.</p><a class="button primary" href="{{ url_for('discover') }}">Découvrir les boutiques</a></section>{% endif %}</section>
+{% endblock %}

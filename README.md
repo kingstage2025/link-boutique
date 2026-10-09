@@ -6,6 +6,9 @@ en ligne et de partager un lien public avec ses clients.
 ## Fonctionnalités
 
 - inscription et connexion ;
+- comptes distincts Client et Commerçant, avec espace client et historique des commandes ;
+- panier visiteur, validation de commande, paiement et livraison simulés prêts à intégrer ;
+- statuts de commande et blocage/réactivation des boutiques par l'administration ;
 - création d'une boutique publique avec un lien unique ;
 - ajout et suppression de produits avec prix et stock ;
 - page publique mobile-first ;
